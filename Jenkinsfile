@@ -1,22 +1,42 @@
 pipeline {
-
     agent any
-
-
+    
+    
     stages {
-
-        stage('Cloner le projet') {
+        stage('Checkout') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/AmeniChakroun/Chakroun_Ameni_4TWIN8.git'
+                checkout scm
             }
         }
-
-        stage('Compilation') {
+        
+        stage('Build') {
             steps {
                 sh 'mvn clean compile'
             }
         }
-
+        
+        stage('Test') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+        
+        stage('Package') {
+            steps {
+                sh 'mvn package -DskipTests'
+            }
+        }
+        
+        stage('Archive') {
+            steps {
+                archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo "Pipeline terminé"
+        }
     }
 }
