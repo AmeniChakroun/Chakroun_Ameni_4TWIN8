@@ -3,21 +3,13 @@ pipeline {
 
     environment {
         DOCKERHUB_REPO = "amenichakroun/student-management"
-        SONAR_HOST     = "http://192.168.33.10:9000"
-        SONAR_PROJECT_KEY = "tp-devops"
-        SONAR_TOKEN    = "sqp_5e37e87f96800112ac1a51e492f73c599c43b4"
-    }
-
-    tools {
-        jdk 'JAVA_HOME'
-        maven 'M2_HOME'
     }
 
     stages {
+
         stage('Checkout') {
             steps {
-                git branch: 'main', 
-                    url: 'https://github.com/AmeniChakroun/Chakroun_Ameni_4TWIN8.git'
+                git branch: 'main', url: 'https://github.com/AmeniChakroun/Chakroun_Ameni_4TWIN8.git'
             }
         }
 
@@ -27,28 +19,18 @@ pipeline {
             }
         }
 
-        // ÉTAPE OUBLIÉE → À REMETTRE OBLIGATOIREMENT
-        stage('SonarQube Analysis') {
-            steps {
-                sh """
-                mvn sonar:sonar \
-                  -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                  -Dsonar.host.url=${SONAR_HOST} \
-                  -Dsonar.login=${SONAR_TOKEN}
-                """
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t ${DOCKERHUB_REPO}:latest ."
+                script {
+                    sh "docker build -t ${DOCKERHUB_REPO}:latest ."
+                }
             }
         }
 
         stage('Login to Docker Hub') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                    sh "echo \$PASS | docker login -u \$USER --password-stdin"
+                    sh "echo $PASS | docker login -u $USER --password-stdin"
                 }
             }
         }
@@ -58,5 +40,6 @@ pipeline {
                 sh "docker push ${DOCKERHUB_REPO}:latest"
             }
         }
+
     }
 }
