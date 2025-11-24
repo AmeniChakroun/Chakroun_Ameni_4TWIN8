@@ -1,5 +1,4 @@
 pipeline {
-
     agent any
 
     tools {
@@ -8,7 +7,6 @@ pipeline {
     }
 
     stages {
-
         stage('Cloner le projet') {
             steps {
                 git branch: 'main',
@@ -22,5 +20,23 @@ pipeline {
             }
         }
 
+        // ÉTAPE SONARQUBE À AJOUTER
+        stage('MVN SONARQUBE') {
+            steps {
+                sh """
+                mvn sonar:sonar \
+                  -Dsonar.projectKey=chakroun_ameni_4twin8 \
+                  -Dsonar.host.url=http://192.168.33.10:9000 \
+                  -Dsonar.login=sqp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   # ← TON TOKEN ICI
+                """
+            }
+        }
+    }
+
+    // Optionnel mais fortement recommandé : bloquer le pipeline si la Quality Gate échoue
+    post {
+        always {
+            echo "Analyse SonarQube terminée !"
+        }
     }
 }
