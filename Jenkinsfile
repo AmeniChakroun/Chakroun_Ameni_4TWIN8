@@ -9,7 +9,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/<votre-user>/student-management.git'
+                git branch: 'main', url: 'https://github.com/AmeniChakroun/Chakroun_Ameni_4TWIN8.git'
             }
         }
 
