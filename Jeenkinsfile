@@ -1,41 +1,45 @@
 pipeline {
     agent any
 
-    tools {
-        jdk 'JAVA_HOME'
-        maven 'M2_HOME'
+    environment {
+        DOCKERHUB_REPO = "amenichakroun/student-management"
     }
 
     stages {
-        stage('Cloner le projet') {
+
+        stage('Checkout') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/AmeniChakroun/Chakroun_Ameni_4TWIN8.git'
+                git branch: 'main', url: 'https://github.com/AmeniChakroun/Chakroun_Ameni_4TWIN8.git'
             }
         }
 
-        stage('Compilation') {
+        stage('Build Maven') {
             steps {
-                sh 'mvn clean compile'
+                sh 'mvn clean package -DskipTests'
             }
         }
 
-        stage('MVN SONARQUBE') {
+        stage('Build Docker Image') {
             steps {
-                sh """
-                mvn sonar:sonar \
-                  -Dsonar.projectKey=tp-devops \
-                  -Dsonar.host.url=http://192.168.33.10:9000 \
-                  -Dsonar.login=sqp_5e37e87f96800112ac1a51e492f73c599c43b4
-                """
+                script {
+                    sh "docker build -t ${DOCKERHUB_REPO}:latest ."
+                }
             }
         }
-    }
 
-    post {
-        always {
-            echo "Analyse SonarQube terminée avec succès !"
-            echo "Va voir ton rapport ici : http://192.168.33.10:9000/dashboard?id=tp-devops"
+        stage('Login to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                    sh "echo $PASS | docker login -u $USER --password-stdin"
+                }
+            }
         }
+
+        stage('Push to Docker Hub') {
+            steps {
+                sh "docker push ${DOCKERHUB_REPO}:latest"
+            }
+        }
+
     }
 }
