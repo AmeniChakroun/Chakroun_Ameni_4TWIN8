@@ -1,12 +1,11 @@
 pipeline {
     agent any
 
-    // Variables globales
     environment {
         DOCKERHUB_REPO = "amenichakroun/student-management"
         SONAR_HOST     = "http://192.168.33.10:9000"
-        SONAR_PROJECT_KEY = "tp-devops"                         // même clé que dans SonarQube
-        SONAR_TOKEN    = "sqp_5e37e87f96800112ac1a51e492f73c599c43b4"  // ton token déjà généré
+        SONAR_PROJECT_KEY = "tp-devops"
+        SONAR_TOKEN    = "sqp_5e37e87f96800112ac1a51e492f73c599c43b4"
     }
 
     tools {
@@ -15,7 +14,6 @@ pipeline {
     }
 
     stages {
-        // 1. Récupération du code
         stage('Checkout') {
             steps {
                 git branch: 'main', 
@@ -23,14 +21,13 @@ pipeline {
             }
         }
 
-        // 2. Compilation + Packaging Maven
         stage('Build Maven') {
             steps {
                 sh 'mvn clean package -DskipTests'
             }
         }
 
-        // 3. Analyse SonarQube (OBLIGATOIRE pour l’atelier)
+        // ÉTAPE OUBLIÉE → À REMETTRE OBLIGATOIREMENT
         stage('SonarQube Analysis') {
             steps {
                 sh """
@@ -42,41 +39,24 @@ pipeline {
             }
         }
 
-        // 4. Construction de l’image Docker
         stage('Build Docker Image') {
             steps {
                 sh "docker build -t ${DOCKERHUB_REPO}:latest ."
             }
         }
 
-        // 5. Connexion à Docker Hub
         stage('Login to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub', 
-                    usernameVariable: 'USER', 
-                    passwordVariable: 'PASS')]) {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
                     sh "echo \$PASS | docker login -u \$USER --password-stdin"
                 }
             }
         }
 
-        // 6. Push de l’image
         stage('Push to Docker Hub') {
             steps {
                 sh "docker push ${DOCKERHUB_REPO}:latest"
             }
-        }
-    }
-
-    post {
-        success {
-            echo "Tout est OK !"
-            echo "Rapport SonarQube → ${SONAR_HOST}/dashboard?id=${SONAR_PROJECT_KEY}"
-            echo "Image Docker → https://hub.docker.com/r/${DOCKERHUB_REPO}"
-        }
-        failure {
-            echo "Échec du pipeline"
         }
     }
 }
