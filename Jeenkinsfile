@@ -20,23 +20,22 @@ pipeline {
             }
         }
 
-        // ÉTAPE SONARQUBE À AJOUTER
         stage('MVN SONARQUBE') {
             steps {
                 sh """
                 mvn sonar:sonar \
-                  -Dsonar.projectKey=chakroun_ameni_4twin8 \
+                  -Dsonar.projectKey=tp-devops \
                   -Dsonar.host.url=http://192.168.33.10:9000 \
-                  -Dsonar.login=sqp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   # ← TON TOKEN ICI
+                  -Dsonar.login=sqp_5e37e87f96800112ac1a51e492f73c599c43b4
                 """
             }
         }
     }
 
-    // Optionnel mais fortement recommandé : bloquer le pipeline si la Quality Gate échoue
     post {
         always {
-            echo "Analyse SonarQube terminée !"
+            echo "Analyse SonarQube terminée avec succès !"
+            echo "Va voir ton rapport ici : http://192.168.33.10:9000/dashboard?id=tp-devops"
         }
     }
 }
