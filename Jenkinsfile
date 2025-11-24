@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_REPO = "ameni/student-management"
+        DOCKERHUB_REPO = "amenichakroun/student-management"
     }
 
     stages {
