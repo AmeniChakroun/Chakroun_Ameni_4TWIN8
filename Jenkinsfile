@@ -2,61 +2,44 @@ pipeline {
     agent any
 
     environment {
-        // Définit les chemins pour Java et Maven
-        JAVA_HOME = '/usr/lib/jvm/java-17-openjdk-amd64'
-        M2_HOME   = '/opt/apache-maven-3.6.3'
-        PATH      = "/opt/apache-maven-3.6.3/bin:${env.JAVA_HOME}/bin:${env.PATH}"
+        DOCKERHUB_REPO = "ameni/student-management"
     }
 
     stages {
 
         stage('Checkout') {
             steps {
-                echo 'Récupération du code depuis GitHub...'
-                checkout scm
+                git branch: 'main', url: 'https://github.com/<votre-user>/student-management.git'
             }
         }
 
-        stage('Build') {
+        stage('Build Maven') {
             steps {
-                echo 'Compilation du projet...'
-                sh 'mvn clean compile'
+                sh 'mvn clean package -DskipTests'
             }
         }
 
-        stage('Test') {
+        stage('Build Docker Image') {
             steps {
-                echo 'Exécution des tests...'
-                sh 'mvn test'
+                script {
+                    sh "docker build -t ${DOCKERHUB_REPO}:latest ."
+                }
             }
         }
 
-        stage('Package') {
+        stage('Login to Docker Hub') {
             steps {
-                echo 'Création du package...'
-                sh 'mvn package -DskipTests'
+                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                    sh "echo $PASS | docker login -u $USER --password-stdin"
+                }
             }
         }
 
-        stage('Archive Artifacts') {
+        stage('Push to Docker Hub') {
             steps {
-                echo 'Archivage des fichiers jar générés...'
-                archiveArtifacts artifacts: '**/target/*.jar', 
-                                 fingerprint: true, 
-                                 allowEmptyArchive: true
+                sh "docker push ${DOCKERHUB_REPO}:latest"
             }
         }
-    }
 
-    post {
-        always {
-            echo 'Pipeline terminé !'
-        }
-        success {
-            echo 'Build réussi et déclenché automatiquement !'
-        }
-        failure {
-            echo 'Le build a échoué. Vérifie les logs !'
-        }
     }
 }
